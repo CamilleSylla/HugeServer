@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const PORT = process.env.PORT || 3001;
 const knex = require('knex');
+const bcrypt = require ('bcrypt');
 const { json } = require('body-parser');
 
 
@@ -17,7 +18,7 @@ const db = knex({
       }
 });
 
-db.select('*').from('users').then(date => {
+db.select('*').from('users').then(data => {
   console.log(data);
 })
 const app = express(); 
@@ -35,15 +36,36 @@ app.get('/dashboard/:id', (req, res) => {
   .catch(err => res.status(400).json('error getting data'))
 });
 
+app.post('/signin', (req, res) => {
+  db.select('email', 'hash').from('login')
+  .where('email', '=' , req.body.email)
+  .then(data => {
+    console.log(data)
+  })
+  .catch(err => res.json(400).json(err))
+})
+
 app.post('/signup', (req, res) => {
-  const { name, email } = req.body;
-  db('users')
-  .returning('*')
-  .insert({
-    name: name,
-    email: email,
-  }).then(user => {
-    res.json(user[0]);
+  const { name, email, password } = req.body;
+  const hash = bcrypt.hashSync(password)
+  //db:transaction permet de tchecker si un des hash 
+  //(en general utiliser lorsquel'on doit verifier plusieurs valeurs)
+  // est faux si c'est le cas le login echouera
+  db.transaction(trx => {
+    trx.insert({
+      hash: hash,
+      email: email
+    }).into('login').returning('email')
+    //loginEmail = a l'élément "email" de l'objet retourner par la requette
+    .then( loginEmail => {
+        return trx('users').returning('*').insert({
+          name: name,
+          email: loginEmail[0],
+        }).then(user => {
+          res.json(user[0]);
+        })
+    })
+    .then(trx.commit).catch(trx.rollback)
   })
   .catch(err => res.status(400).json("Oups, mauvaise informations"))
 });
