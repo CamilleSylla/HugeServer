@@ -26,6 +26,15 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extends: false}));
 
+app.get('/dashboard/:id', (req, res) => {
+  const { id } = req.params;
+  db.select('*').from('users').where({ id })
+  .then(user => {
+      res.json(user[0])
+  })
+  .catch(err => res.status(400).json('error getting data'))
+});
+
 app.post('/signup', (req, res) => {
   const { name, email } = req.body;
   db('users')
@@ -37,7 +46,7 @@ app.post('/signup', (req, res) => {
     res.json(user[0]);
   })
   .catch(err => res.status(400).json("Oups, mauvaise informations"))
-})
+});
 
 app.listen(PORT, () => {
     console.log(`Listening on port: ${PORT}`);
