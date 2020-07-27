@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const PORT = process.env.PORT || 3001;
 const knex = require('knex');
+const { json } = require('body-parser');
 
 
 const db = knex({
@@ -27,10 +28,15 @@ app.use(bodyParser.urlencoded({ extends: false}));
 
 app.post('/signup', (req, res) => {
   const { name, email } = req.body;
-  db('users').insert({
+  db('users')
+  .returning('*')
+  .insert({
     name: name,
     email: email,
-  }).then(console.log)
+  }).then(user => {
+    res.json(user[0]);
+  })
+  .catch(err => res.status(400).json("Oups, mauvaise informations"))
 })
 
 app.listen(PORT, () => {
