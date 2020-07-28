@@ -47,28 +47,24 @@ app.post('/signin', (req, res) => {
 
 app.post('/signup', (req, res) => {
   const { name, email, password } = req.body;
-  const hash = bcrypt.hashSync(password)
-  //db:transaction permet de tchecker si un des hash 
-  //(en general utiliser lorsquel'on doit verifier plusieurs valeurs)
-  // est faux si c'est le cas le login echouera
-  db.transaction(trx => {
-    trx.insert({
+  const saltRounds = 10;
+  const hash = req.body.password;
+  bcrypt.hash(hash, saltRounds, function(err, hash) {
+    db.insert({
       hash: hash,
       email: email
-    }).into('login').returning('email')
-    //loginEmail = a l'élément "email" de l'objet retourner par la requette
-    .then( loginEmail => {
-        return trx('users').returning('*').insert({
-          name: name,
-          email: loginEmail[0],
-        }).then(user => {
-          res.json(user[0]);
-        })
+}).into('login').returning('email').then(loginEmail => {
+  return db('users').returning('*').insert({
+    name: name,
+    email: loginEmail[0]
+  }).then(user => {
+    res.json(user[0]);
     })
-    .then(trx.commit).catch(trx.rollback)
   })
   .catch(err => res.status(400).json("Oups, mauvaise informations"))
+  })
 });
+
 
 app.listen(PORT, () => {
     console.log(`Listening on port: ${PORT}`);
