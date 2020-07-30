@@ -47,25 +47,28 @@ app.post('/signin', (req, res) => {
 })
 
 app.post('/signup', (req, res) => {
-  const { name, email, password } = req.body;
+  const { nom, email, prenom, password } = req.body;
   const saltRounds = 10;
   const hash = req.body.password;
   bcrypt.hash(hash, saltRounds, function(err, hash) {
     db.insert({
       hash: hash,
-      email: email
+      email: email,
+      nom: nom,
+      prenom: prenom
 }).into('login')
 .returning('email')
 .then(loginEmail => {
   return db('users').returning('*').insert({
-    name: name,
+    nom: nom,
+    prenom: prenom,
     email: loginEmail[0]
   })
   .then(user => {
     res.json(user[0]);
     })
   })
-  .catch(err => res.status(400).json(err))
+  .catch(err => res.status(400).json("un compte est deja asssocié a cette adresse email"))
   })
 });
 
