@@ -68,7 +68,7 @@ app.post('/signup', (req, res) => {
     res.json(user[0]);
     })
   })
-  .catch(err => res.status(400).json("un compte est deja asssocié a cette adresse email"))
+  .catch(err => res.status(400).json(err))
   })
 });
 
