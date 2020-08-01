@@ -37,13 +37,24 @@ app.get('/dashboard/:id', (req, res) => {
   .catch(err => res.status(400).json('error getting data'))
 });
 
-app.post('/signin', (req, res) => {
+app.post('/', (req, res) => {
   db.select('email', 'hash').from('login')
-  .where('email', '=' , req.body.email)
+  .where('email', '=', req.body.email)
   .then(data => {
-    console.log(data)
+    const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
+    console.log(isValid);
+    if (isValid) {
+      return db.select('*').from('users').where('email', '=' , req.body.email).then(user => {
+        console.log(user);
+        res.json(user[0])
+      })
+      .catch(err => res.status(400).json('Impossible de trouver utilisateur'))
+    }else{
+      res.status(400).json('le mot de passe ou votre email sont incorrectes')
+    }
+    
   })
-  .catch(err => res.json(400).json(err))
+  .catch(err => res.status(400).json('mauvaises informations'))
 })
 
 app.post('/signup', (req, res) => {
