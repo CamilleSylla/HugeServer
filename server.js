@@ -32,7 +32,7 @@ app.get('/dashboard/:id', (req, res) => {
   const { id } = req.params;
   db.select('*').from('users').where({ id })
   .then(user => {
-    if(user.lenght){
+    if(user.length){
       res.json(user[0])
     }else{
       res.status(400).json('Not found')
@@ -88,16 +88,6 @@ app.post('/signup', (req, res) => {
   })
 });
 
-//.then(loginEmail => {
-  //return db('users').returning('*').insert({
-    //name: name,
-    //email: loginEmail[0]
-  //}).then(user => {
-    //res.json(user[0]);
-  //})
-//})
-  //.catch(err => res.status(400).json("Oups, mauvaise informations"))
-//});
 
 app.listen(PORT, () => {
     console.log(`Listening on port: ${PORT}`);
